@@ -54,7 +54,7 @@ namespace Ogre {
         edgeData->updateTriangleLightFacing(lightPos);
     }
     // ------------------------------------------------------------------------
-    bool isBoundOkForMcGuire(const AxisAlignedBox& lightCapBounds, const Ogre::Vector3& lightPosition)
+    static bool isBoundOkForMcGuire(const AxisAlignedBox& lightCapBounds, const Ogre::Vector3& lightPosition)
     {
         // If light position is inside light cap bound then extrusion could be in opposite directions
         // and McGuire cap could intersect near clip plane of camera frustum without being noticed
@@ -93,8 +93,8 @@ namespace Ogre {
             
             // find max angular size in range [0..pi] by finding min cos of angular size, range [1..-1]
             Real cosAngle = 1.0;
-            for(int i0 = 0; i0 + 1 < edgeCornersCount; ++i0)
-                for(int i1 = i0 + 1; i1 < edgeCornersCount; ++i1)
+            for(unsigned i0 = 0; i0 + 1 < edgeCornersCount; ++i0)
+                for(unsigned i1 = i0 + 1; i1 < edgeCornersCount; ++i1)
                 {
                     // 4~6 edge corners, 6~15 angular distance calculations
                     Vector3 a = (edgeCorners[i0] - lightPosition).normalisedCopy();
