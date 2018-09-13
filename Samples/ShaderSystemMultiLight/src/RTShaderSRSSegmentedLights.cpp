@@ -129,7 +129,7 @@ void RTShaderSRSSegmentedLights::updateGpuProgramsParams(Renderable* rend, Pass*
 
 
                 // Update light direction.
-                vec3 = source->getInverseTransposeWorldMatrix().linear() * srcLight->getDerivedDirection();
+                vec3 = source->getInverseTransposeWorldMatrix().get3x3Matrix() * srcLight->getDerivedDirection();
                 vec3.normalise();
 
                 vParameter.x = -vec3.x;

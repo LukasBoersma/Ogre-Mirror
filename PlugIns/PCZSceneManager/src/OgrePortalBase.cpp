@@ -275,7 +275,7 @@ void PortalBase::updateDerivedValues(void) const
             {
                 mDerivedCorners[i] =  transform * mCorners[i];
             }
-            mDerivedDirection = transform.linear() * mDirection;
+            mDerivedDirection = transform.get3x3Matrix() * mDirection;
             break;
         case PORTAL_TYPE_AABB:
             {
