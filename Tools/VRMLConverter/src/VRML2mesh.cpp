@@ -382,7 +382,7 @@ void copyToSubMesh(SubMesh *sub, const TriVec &triangles, const VertVec &vertice
     sub->indexData->indexStart = 0;
     sub->indexData->indexCount = nfaces*3;
 
-    Matrix3 normMat = mat.get3x3Matrix().inverse().transpose();
+    Matrix3 normMat = mat.linear().inverse().transpose();
 
     uchar* vattrs = (uchar*)vbuf->lock(HardwareBuffer::HBL_DISCARD);
     // populate vertex arrays

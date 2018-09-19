@@ -250,7 +250,7 @@ namespace Ogre
     {
         Matrix3 matQ;
         Vector3 vecU;
-        get3x3Matrix().QDUDecomposition( matQ, scale, vecU );
+        linear().QDUDecomposition( matQ, scale, vecU );
 
         orientation = Quaternion( matQ );
         position = Vector3( m[0][3], m[1][3], m[2][3] );

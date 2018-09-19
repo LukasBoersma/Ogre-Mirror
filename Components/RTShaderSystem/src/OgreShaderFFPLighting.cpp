@@ -135,7 +135,7 @@ void FFPLighting::updateGpuProgramsParams(Renderable* rend, Pass* pass, const Au
 			curParams.mPosition->setGpuParameter(vParameter);
 			
 							
-			vec3 = source->getInverseTransposeViewMatrix().get3x3Matrix() * srcLight->getDerivedDirection();
+			vec3 = source->getInverseTransposeViewMatrix().linear() * srcLight->getDerivedDirection();
 			vec3.normalise();
 
 			vParameter.x = -vec3.x;

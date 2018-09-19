@@ -2676,7 +2676,7 @@ namespace Ogre
                     break;
                 case ACT_LIGHT_DIRECTION_OBJECT_SPACE:
                     // We need the inverse of the inverse transpose
-                    m3 = source->getTransposeWorldMatrix().get3x3Matrix();
+                    m3 = source->getTransposeWorldMatrix().linear();
                     vec3 = m3 * source->getLightDirection(i->data);
                     vec3.normalise();
                     // Set as 4D vector for compatibility
@@ -2696,7 +2696,7 @@ namespace Ogre
 
                 case ACT_LIGHT_DIRECTION_OBJECT_SPACE_ARRAY:
                     // We need the inverse of the inverse transpose
-                    m3 = source->getTransposeWorldMatrix().get3x3Matrix();
+                    m3 = source->getTransposeWorldMatrix().linear();
                     for (size_t l = 0; l < i->data; ++l)
                     {
                         vec3 = m3 * source->getLightDirection(l);
@@ -2768,7 +2768,7 @@ namespace Ogre
                     {
                         //Based on Matrix4::decompostion, but we don't need the rotation or position components
                         //but do need the scaling and shearing. Shearing isn't available from Matrix4::decomposition
-                        m3 = pMatrix->get3x3Matrix();
+                        m3 = pMatrix->linear();
 
                         Matrix3 matQ;
                         Vector3 scale;
@@ -2858,7 +2858,7 @@ namespace Ogre
                                       source->getViewMatrix() * source->getLightAs4DVector(i->data), i->elementCount);
                     break;
                 case ACT_LIGHT_DIRECTION_VIEW_SPACE:
-                    m3 = source->getInverseTransposeViewMatrix().get3x3Matrix();
+                    m3 = source->getInverseTransposeViewMatrix().linear();
                     // inverse transpose in case of scaling
                     vec3 = m3 * source->getLightDirection(i->data);
                     vec3.normalise();
@@ -2868,7 +2868,7 @@ namespace Ogre
                 case ACT_SHADOW_EXTRUSION_DISTANCE:
                     // extrusion is in object-space, so we have to rescale by the inverse
                     // of the world scaling to deal with scaled objects
-                    m3 = source->getWorldMatrix().get3x3Matrix();
+                    m3 = source->getWorldMatrix().linear();
                     _writeRawConstant(i->physicalIndex, source->getShadowExtrusionDistance() /
                                       Math::Sqrt(std::max(std::max(m3.GetColumn(0).squaredLength(), m3.GetColumn(1).squaredLength()), m3.GetColumn(2).squaredLength())));
                     break;
@@ -2956,7 +2956,7 @@ namespace Ogre
                     break;
 
                 case ACT_LIGHT_DIRECTION_VIEW_SPACE_ARRAY:
-                    m3 = source->getInverseTransposeViewMatrix().get3x3Matrix();
+                    m3 = source->getInverseTransposeViewMatrix().linear();
                     for (size_t l = 0; l < i->data; ++l)
                     {
                         vec3 = m3 * source->getLightDirection(l);

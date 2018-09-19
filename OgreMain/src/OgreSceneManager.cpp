@@ -2149,7 +2149,7 @@ void SceneManager::renderSingleObject(Renderable* rend, const Pass* pass,
     // Assume first world matrix representative - shaders that use multiple
     // matrices should control renormalisation themselves
     if ((pass->getNormaliseNormals() || mNormaliseNormalsOnScale) &&
-        mTempXform[0].get3x3Matrix().hasScale())
+        mTempXform[0].linear().hasScale())
         mDestRenderSystem->setNormaliseNormals(true);
     else
         mDestRenderSystem->setNormaliseNormals(false);
@@ -2160,7 +2160,7 @@ void SceneManager::renderSingleObject(Renderable* rend, const Pass* pass,
     {
         CullingMode cullMode = mPassCullingMode;
 
-        if (mTempXform[0].get3x3Matrix().hasNegativeScale())
+        if (mTempXform[0].linear().hasNegativeScale())
         {
             switch(mPassCullingMode)
             {

@@ -137,7 +137,7 @@ void PerPixelLighting::updateGpuProgramsParams(Renderable* rend, Pass* pass, con
 
 
                 // Update light direction.
-                vec3 = source->getInverseTransposeViewMatrix().get3x3Matrix() * srcLight->getDerivedDirection();
+                vec3 = source->getInverseTransposeViewMatrix().linear() * srcLight->getDerivedDirection();
                 vec3.normalise();
 
                 vParameter.x = -vec3.x;
