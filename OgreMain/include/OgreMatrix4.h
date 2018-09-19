@@ -114,6 +114,7 @@ namespace Ogre
                            m[2][0], m[2][1], m[2][2]);
         }
 
+        Matrix3 linear() const { return get3x3Matrix(); }
         OGRE_DEPRECATED void extract3x3Matrix(Matrix3& m3x3) const { m3x3 = get3x3Matrix(); }
         OGRE_DEPRECATED Quaternion extractQuaternion() const { return Quaternion(get3x3Matrix()); }
         /// Sets the translation transformation part of the matrix.
