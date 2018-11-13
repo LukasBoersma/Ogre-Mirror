@@ -31,13 +31,14 @@
 namespace Ogre
 {
     
-    void LodInputProvider::printTriangle(LodData::Triangle* triangle, stringstream& str)
+    void LodInputProvider::printTriangle(const LodData::VertexList& vertexList, LodData::Triangle* triangle, stringstream& str)
 {
     for (int i = 0; i < 3; i++) {
+        const LodData::Vertex* v = &vertexList[triangle->vertexi[i]];
         str << (i + 1) << ". vertex position: ("
-            << triangle->vertex[i]->position.x << ", "
-            << triangle->vertex[i]->position.y << ", "
-            << triangle->vertex[i]->position.z << ") "
+            << v->position.x << ", "
+            << v->position.y << ", "
+            << v->position.z << ") "
             << "vertex ID: " << triangle->vertexID[i] << std::endl;
     }
 }
@@ -45,24 +46,25 @@ namespace Ogre
 bool LodInputProvider::isDuplicateTriangle(LodData::Triangle* triangle, LodData::Triangle* triangle2)
 {
     for (int i = 0; i < 3; i++) {
-        if (triangle->vertex[i] != triangle2->vertex[0] ||
-            triangle->vertex[i] != triangle2->vertex[1] ||
-            triangle->vertex[i] != triangle2->vertex[2]) {
+        if (triangle->vertexi[i] != triangle2->vertexi[0] ||
+            triangle->vertexi[i] != triangle2->vertexi[1] ||
+            triangle->vertexi[i] != triangle2->vertexi[2]) {
                 return false;
         }
     }
     return true;
 }
 
-LodData::Triangle* LodInputProvider::isDuplicateTriangle(LodData::Triangle* triangle)
+LodData::Triangle* LodInputProvider::isDuplicateTriangle(LodData* data, LodData::Triangle* triangle)
 {
     // duplicate triangle detection (where all vertices has the same position)
-    LodData::VTriangles::iterator itEnd = triangle->vertex[0]->triangles.end();
-    LodData::VTriangles::iterator it = triangle->vertex[0]->triangles.begin();
+    LodData::Vertex* v0 = &data->mVertexList[triangle->vertexi[0]];
+    LodData::VTriangles::iterator itEnd = v0->triangles.end();
+    LodData::VTriangles::iterator it = v0->triangles.begin();
     for (; it != itEnd; ++it) {
-        LodData::Triangle* t = *it;
+        LodData::Triangle* t = &data->mTriangleList[*it];
         if (isDuplicateTriangle(triangle, t)) {
-            return *it;
+            return t;
         }
     }
     return NULL;
@@ -70,15 +72,15 @@ LodData::Triangle* LodInputProvider::isDuplicateTriangle(LodData::Triangle* tria
 void LodInputProvider::addTriangleToEdges(LodData* data, LodData::Triangle* triangle)
 {
     if(MESHLOD_QUALITY >= 3) {
-        LodData::Triangle* duplicate = isDuplicateTriangle(triangle);
+        LodData::Triangle* duplicate = isDuplicateTriangle(data, triangle);
         if (duplicate != NULL) {
 #if OGRE_DEBUG_MODE
             stringstream str;
             str << "In " << data->mMeshName << " duplicate triangle found." << std::endl;
             str << "Triangle " << LodData::getVectorIDFromPointer(data->mTriangleList, triangle) << " positions:" << std::endl;
-            printTriangle(triangle, str);
+            printTriangle(data->mVertexList, triangle, str);
             str << "Triangle " << LodData::getVectorIDFromPointer(data->mTriangleList, duplicate) << " positions:" << std::endl;
-            printTriangle(duplicate, str);
+            printTriangle(data->mVertexList, duplicate, str);
             str << "Triangle " << LodData::getVectorIDFromPointer(data->mTriangleList, triangle) << " will be excluded from Lod level calculations.";
             LogManager::getSingleton().stream() << str.str();
 #endif
@@ -87,13 +89,15 @@ void LodInputProvider::addTriangleToEdges(LodData* data, LodData::Triangle* tria
             return;
         }
     }
+    LodData::TriangleI trianglei = LodData::getVectorIDFromPointer(data->mTriangleList, triangle);
     for (int i = 0; i < 3; i++) {
-        triangle->vertex[i]->triangles.addNotExists(triangle);
+        data->mVertexList[triangle->vertexi[i]].triangles.addNotExists(trianglei);
     }
     for (int i = 0; i < 3; i++) {
+        LodData::Vertex* v = &data->mVertexList[triangle->vertexi[i]];
         for (int n = 0; n < 3; n++) {
             if (i != n) {
-                triangle->vertex[i]->addEdge(LodData::Edge(triangle->vertex[n]));
+                v->addEdge(LodData::Edge(triangle->vertexi[n]));
             }
         }
     }

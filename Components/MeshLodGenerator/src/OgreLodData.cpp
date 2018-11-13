@@ -35,7 +35,7 @@ const Real LodData::UNINITIALIZED_COLLAPSE_COST = std::numeric_limits<float>::in
 
 void LodData::Vertex::addEdge( const LodData::Edge& edge )
 {
-    OgreAssert(edge.dst != this, "");
+    //OgreAssert(edge.dst != this, "");
     VEdges::iterator it;
     it = edges.add(edge);
     if (it == edges.end()) {
@@ -55,14 +55,15 @@ void LodData::Vertex::removeEdge( const LodData::Edge& edge )
     }
 }
 
-bool LodData::VertexEqual::operator() (const LodData::Vertex* lhs, const LodData::Vertex* rhs) const
+bool LodData::VertexEqual::operator() (const LodData::VertexI lhs, const LodData::VertexI rhs) const
 {
-    return lhs->position == rhs->position;
+    return mGen->mVertexList[lhs].position == mGen->mVertexList[rhs].position;
 }
 
-size_t LodData::VertexHash::operator() (const LodData::Vertex* v) const
+size_t LodData::VertexHash::operator() (const LodData::VertexI vi) const
 {
     // Stretch the values to an integer grid.
+    const LodData::Vertex* v = &mGen->mVertexList[vi];
     Real stretch = (Real)0x7fffffff / mGen->mMeshBoundingSphereRadius;
     int hash = (int)(v->position.x * stretch);
     hash ^= (int)(v->position.y * stretch) * 0x100;
@@ -70,28 +71,39 @@ size_t LodData::VertexHash::operator() (const LodData::Vertex* v) const
     return (size_t)hash;
 }
 
-bool LodData::Triangle::hasVertex(const LodData::Vertex* v) const
+void LodData::Triangle::computeNormal(const VertexList& vertexList)
 {
-    return (v == vertex[0] || v == vertex[1] || v == vertex[2]);
+    // Cross-product 2 edges
+    Vector3 e1 = vertexList[vertexi[1]].position - vertexList[vertexi[0]].position;
+    Vector3 e2 = vertexList[vertexi[2]].position - vertexList[vertexi[1]].position;
+
+    normal = e1.crossProduct(e2);
+    normal.normalise();
 }
 
-unsigned int LodData::Triangle::getVertexID(const LodData::Vertex* v) const
+bool LodData::Triangle::hasVertex(const LodData::VertexI vi) const
+{
+    return (vi == vertexi[0] || vi == vertexi[1] || vi == vertexi[2]);
+}
+
+unsigned int LodData::Triangle::getVertexID(const LodData::VertexI vi) const
 {
     for (int i = 0; i < 3; i++) {
-        if (vertex[i] == v) {
+        if (vertexi[i] == vi) {
             return vertexID[i];
         }
     }
     OgreAssert(0, "");
     return 0;
 }
+
 bool LodData::Triangle::isMalformed()
 {
-    return vertex[0] == vertex[1] || vertex[0] == vertex[2] || vertex[1] == vertex[2];
+    return vertexi[0] == vertexi[1] || vertexi[0] == vertexi[2] || vertexi[1] == vertexi[2];
 }
 
-LodData::Edge::Edge(LodData::Vertex* destination) :
-    dst(destination)
+LodData::Edge::Edge(LodData::VertexI destinationi) :
+    dsti(destinationi)
 #if OGRE_DEBUG_MODE
     , collapseCost(UNINITIALIZED_COLLAPSE_COST)
 #endif
@@ -107,12 +119,12 @@ LodData::Edge::Edge(const LodData::Edge& b)
 
 bool LodData::Edge::operator< (const LodData::Edge& other) const
 {
-    return (size_t) dst < (size_t) other.dst;   // Comparing pointers for uniqueness.
+    return dsti < other.dsti;   // Comparing pointers for uniqueness.
 }
 
 LodData::Edge& LodData::Edge::operator= (const LodData::Edge& b)
 {
-    dst = b.dst;
+    dsti = b.dsti;
     collapseCost = b.collapseCost;
     refCount = b.refCount;
     return *this;
@@ -120,7 +132,7 @@ LodData::Edge& LodData::Edge::operator= (const LodData::Edge& b)
 
 bool LodData::Edge::operator== (const LodData::Edge& other) const
 {
-    return dst == other.dst;
+    return dsti == other.dsti;
 }
 
 }

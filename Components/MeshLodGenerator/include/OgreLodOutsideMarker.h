@@ -51,27 +51,24 @@ public:
      * @param walkAngle Walk angle in dot product values. Allowed range is from -1 to 1. Default = 0. Smaller value is bigger angle.
      *        If you set it to 1 then you can disable walking and it will only mark the vertices on the convex hull.
      */
-    LodOutsideMarker(LodData::VertexList & vertexList, Real boundingSphereRadius, Real walkAngle);
+    LodOutsideMarker(LodData::VertexList & vertexList, LodData::TriangleList& triangleList, Real boundingSphereRadius, Real walkAngle);
     void markOutside(); /// Mark vertices, which are visible from outside.
     MeshPtr createConvexHullMesh(const String& meshName,
         const String& resourceGroupName = ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME); /// Returns a mesh containing the Convex Hull shape.
 
-    bool isVertexOutside(LodData::Vertex* v) {
+    bool isVertexOutside(LodData::VertexI v) {
         return getOutsideData(v)->isOuterWallVertex;
     }
 
 private:
     typedef LodData::Vertex CHVertex;
+    typedef LodData::VertexI CHVertexI;
 
     struct CHTriangle {
-        bool removed; // Whether the triangle is excluded from hull.
-        CHVertex* vertex[3];
+        CHVertexI vertexi[3];
         Vector3 normal;
-        void computeNormal()
-        {
-            normal = Math::calculateBasicFaceNormal(vertex[0]->position, vertex[1]->position,
-                                                    vertex[2]->position);
-        }
+        bool removed; // Whether the triangle is excluded from hull.
+        void computeNormal(const LodData::VertexList& vertexList);
     };
 
     
@@ -85,7 +82,7 @@ private:
     typedef std::vector<OutsideData> OutsideDataList;
     typedef std::vector<CHTriangle> CHTriangleList;
     typedef std::vector<CHTriangle*> CHTrianglePList;
-    typedef std::vector<std::pair<CHVertex*, CHVertex*> > CHEdgeList;
+    typedef std::vector<std::pair<CHVertexI, CHVertexI> > CHEdgeList;
 
 
 
@@ -95,6 +92,7 @@ private:
     CHTrianglePList mVisibleTriangles; /// Temporary vector for addVisibleEdges function (prevent allocation every call).
     CHEdgeList mEdges; /// Temporary vector for the horizon edges, when inserting a new vertex into the hull.
     LodData::VertexList& mVertexListOrig; /// Source of input and output of the algorithm.
+    LodData::TriangleList& mTriangleListOrig; /// Source of input and output of the algorithm.
     
     OutsideDataList mOutsideData;
     Vector3 mCentroid; /// Centroid of the convex hull.
@@ -106,20 +104,23 @@ private:
     OutsideData* getOutsideData(LodData::Vertex* v) {
         return &mOutsideData[LodData::getVectorIDFromPointer(mVertexListOrig, v)];
     }
+    OutsideData* getOutsideData(LodData::VertexI vi) {
+        return &mOutsideData[vi];
+    }
 
     void initHull(); /// Initializes the hull for expansion.
-    void createTriangle(CHVertex* v1, CHVertex* v2, CHVertex* v3); /// Sets the vertices of a triangle (called from initHull only).
+    void createTriangle(CHVertexI v1, CHVertexI v2, CHVertexI v3); /// Sets the vertices of a triangle (called from initHull only).
     Real getTetrahedronVolume(CHVertex* v0, CHVertex* v1, CHVertex* v2, CHVertex* v3);
     Real getPointToLineSqraredDistance(CHVertex* x1, CHVertex* x2, CHVertex* vertex);
     void generateHull(); /// Generates the hull.
     size_t addVertex(CHVertex* vertex); /// Adds vertex to hull.
-    void addEdge(CHEdgeList& edges, CHVertex* a, CHVertex* b); /// Add edge to the list of removable edges.
+    void addEdge(CHEdgeList& edges, CHVertexI a, CHVertexI b); /// Add edge to the list of removable edges.
     void cleanHull(); /// Removes Triangles, which are having CHTriangle::removed = true.
     bool isVisible(CHTriangle* triangle, Vector3& vertex); /// Whether face is visible from point.
     CHVertex* getFurthestVertex(CHTriangle* hull); /// Gets furthest vertex from face.
     void getVisibleTriangles(const CHVertex* target, CHTrianglePList& visibleTriangles); /// Adds visible edges to the list, when viewing from target point.
     void getHorizon(const CHTrianglePList& tri, CHEdgeList& ); /// Removes edges, which are not on the horizon.
-    void fillHorizon(CHEdgeList& e, CHVertex* target); /// Caps the hole with faces connecting to target vertex.
+    void fillHorizon(CHEdgeList& e, CHVertexI targeti); /// Caps the hole with faces connecting to target vertex.
     void markVertices(); /// if we have the convex hull, this will walk on the faces which have less then 90 degree difference.
     template<typename T>
     void addHullTriangleVertices(std::vector<CHVertex*>& stack, T tri); /// Add triangle to stack (called from markVertices only).

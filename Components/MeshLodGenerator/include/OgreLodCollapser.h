@@ -87,13 +87,13 @@ protected:
 
     /// Collapses a single vertex.
     void collapseVertex(LodData* data, LodCollapseCost* cost, LodOutputProvider* output, LodData::Vertex* src);
-    void assertOutdatedCollapseCost(LodData* data, LodCollapseCost* cost, LodData::Vertex* vertex);
+    void assertOutdatedCollapseCost(LodData* data, LodCollapseCost* cost, LodData::VertexI vertexi);
     void assertValidMesh(LodData* data);
-    void assertValidVertex(LodData* data, LodData::Vertex* v);
+    void assertValidVertex(LodData* data, LodData::VertexI vi);
     bool hasSrcID(unsigned int srcID, size_t submeshID);
-    void removeTriangleFromEdges(LodData::Triangle* triangle, LodData::Vertex* skip);
+    void removeTriangleFromEdges(LodData* data, LodData::Triangle* triangle, LodData::VertexI skipi);
     size_t findDstID(unsigned int srcID, size_t submeshID);
-    void replaceVertexID(LodData::Triangle* triangle, unsigned int oldID, unsigned int newID, LodData::Vertex* dst);
+    void replaceVertexID(LodData* data, LodData::Triangle* triangle, unsigned int oldID, unsigned int newID, LodData::Vertex* dst);
 };
 /** @} */
 /** @} */

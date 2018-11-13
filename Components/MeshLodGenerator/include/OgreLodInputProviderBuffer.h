@@ -52,7 +52,7 @@ protected:
 
     LodInputBuffer mBuffer;
 
-    typedef std::vector<LodData::Vertex*> VertexLookupList;
+    typedef std::vector<LodData::VertexI> VertexLookupList;
     // This helps to find the vertex* in LodData for index buffer indices
     VertexLookupList mSharedVertexLookup;
     VertexLookupList mVertexLookup;
@@ -77,14 +77,14 @@ protected:
                 // Invalid index: Index is bigger then vertex buffer size.
                 OgreAssertDbg(iPos[i] < lookup.size(), "");
                 tri->vertexID[i] = iPos[i];
-                tri->vertex[i] = lookup[iPos[i]];
+                tri->vertexi[i] = lookup[iPos[i]];
             }
             if (tri->isMalformed()) {
 #if OGRE_DEBUG_MODE
                 stringstream str;
                 str << "In " << data->mMeshName << " malformed triangle found with ID: " << LodData::getVectorIDFromPointer(data->mTriangleList, tri) << ". " <<
                 std::endl;
-                printTriangle(tri, str);
+                printTriangle(data->mVertexList, tri, str);
                 str << "It will be excluded from Lod level calculations.";
                 LogManager::getSingleton().stream() << str.str();
 #endif
@@ -92,7 +92,7 @@ protected:
                 data->mIndexBufferInfoList[tri->submeshID].indexCount -= 3;
                 continue;
             }
-            tri->computeNormal();
+            tri->computeNormal(data->mVertexList);
             addTriangleToEdges(data, tri);
         }
     }
