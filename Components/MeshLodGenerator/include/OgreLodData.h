@@ -126,7 +126,7 @@ struct _OgreLodExport LodData {
         unsigned int vertexID[3]; /// Vertex ID in the buffer associated with the submeshID.
 
         void computeNormal(const VertexList& vertexList);
-        bool hasVertex(const VertexI vi) const;
+        bool hasVertex(const VertexI vi) const { return (vi == vertexi[0] || vi == vertexi[1] || vi == vertexi[2]); }
         unsigned int getVertexID(const VertexI vi) const;
         bool isMalformed();
     };
