@@ -81,6 +81,11 @@ void LodData::Triangle::computeNormal(const VertexList& vertexList)
     normal.normalise();
 }
 
+bool LodData::Triangle::hasVertex(const LodData::VertexI vi) const
+{
+    return (vi == vertexi[0] || vi == vertexi[1] || vi == vertexi[2]);
+}
+
 unsigned int LodData::Triangle::getVertexID(const LodData::VertexI vi) const
 {
     for (int i = 0; i < 3; i++) {
