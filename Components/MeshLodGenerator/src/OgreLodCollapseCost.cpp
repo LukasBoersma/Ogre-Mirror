@@ -35,10 +35,9 @@ namespace Ogre
         data->mCollapseCostHeap.clear();
         LodData::VertexList::iterator it = data->mVertexList.begin();
         LodData::VertexList::iterator itEnd = data->mVertexList.end();
-        LodData::VertexI vi = 0;
-        for (; it != itEnd; ++it, ++vi) {
+        for (; it != itEnd; it++) {
             if (!it->edges.empty()) {
-                initVertexCollapseCost(data, vi);
+                initVertexCollapseCost(data, &*it);
             } else {
 #if OGRE_DEBUG_MODE
                 LogManager::getSingleton().stream() << "In " << data->mMeshName << " never used vertex found with ID: " << data->mCollapseCostHeap.size() << ". "
@@ -52,47 +51,44 @@ namespace Ogre
         }
     }
 
-    void LodCollapseCost::computeVertexCollapseCost( LodData* data, LodData::VertexI vertexi, Real& collapseCost, LodData::VertexI& collapseToi )
+    void LodCollapseCost::computeVertexCollapseCost( LodData* data, LodData::Vertex* vertex, Real& collapseCost, LodData::Vertex*& collapseTo )
     {
-        LodData::Vertex* vertex = &data->mVertexList[vertexi];
         LodData::VEdges::iterator it = vertex->edges.begin();
         for (; it != vertex->edges.end(); ++it) {
-            it->collapseCost = computeEdgeCollapseCost(data, vertexi, &*it);
+            it->collapseCost = computeEdgeCollapseCost(data, vertex, &*it);
             if (collapseCost > it->collapseCost) {
                 collapseCost = it->collapseCost;
-                collapseToi = it->dsti;
+                collapseTo = it->dst;
             }
         }
     }
-    void LodCollapseCost::initVertexCollapseCost( LodData* data, LodData::VertexI vertexi )
+    void LodCollapseCost::initVertexCollapseCost( LodData* data, LodData::Vertex* vertex )
     {
-        LodData::Vertex* vertex = &data->mVertexList[vertexi];
         OgreAssert(!vertex->edges.empty(), "");
 
         Real collapseCost = LodData::UNINITIALIZED_COLLAPSE_COST;
-        LodData::VertexI collapseToi = LodData::InvalidIndex;
-        computeVertexCollapseCost(data, vertexi, collapseCost, collapseToi);
+        LodData::Vertex* collapseTo = NULL;
+        computeVertexCollapseCost(data, vertex, collapseCost, collapseTo);
 
-        vertex->collapseToi = collapseToi;
-        vertex->costHeapPosition = data->mCollapseCostHeap.insert(LodData::CollapseCostHeap::value_type(collapseCost, vertexi));
+        vertex->collapseTo = collapseTo;
+        vertex->costHeapPosition = data->mCollapseCostHeap.insert(LodData::CollapseCostHeap::value_type(collapseCost, vertex));
     }
 
-    void LodCollapseCost::updateVertexCollapseCost( LodData* data, LodData::VertexI vertexi )
+    void LodCollapseCost::updateVertexCollapseCost( LodData* data, LodData::Vertex* vertex )
     {
         Real collapseCost = LodData::UNINITIALIZED_COLLAPSE_COST;
-        unsigned int collapseToi = LodData::InvalidIndex;
-        computeVertexCollapseCost(data, vertexi, collapseCost, collapseToi);
+        LodData::Vertex* collapseTo = NULL;
+        computeVertexCollapseCost(data, vertex, collapseCost, collapseTo);
 
-        LodData::Vertex* vertex = &data->mVertexList[vertexi];
-        if (vertex->collapseToi != collapseToi || collapseCost != vertex->costHeapPosition->first) {
+        if (vertex->collapseTo != collapseTo || collapseCost != vertex->costHeapPosition->first) {
             OgreAssert(vertex->costHeapPosition != data->mCollapseCostHeap.end(), "");
             data->mCollapseCostHeap.erase(vertex->costHeapPosition);
             if (collapseCost != LodData::UNINITIALIZED_COLLAPSE_COST) {
-                vertex->collapseToi = collapseToi;
-                vertex->costHeapPosition = data->mCollapseCostHeap.insert(LodData::CollapseCostHeap::value_type(collapseCost, vertexi));
+                vertex->collapseTo = collapseTo;
+                vertex->costHeapPosition = data->mCollapseCostHeap.insert(LodData::CollapseCostHeap::value_type(collapseCost, vertex));
             } else {
 #if OGRE_DEBUG_MODE
-                vertex->collapseToi = LodData::InvalidIndex;
+                vertex->collapseTo = NULL;
                 vertex->costHeapPosition = data->mCollapseCostHeap.end();
 #endif
             }

@@ -48,17 +48,17 @@ namespace Ogre
         OgreAssert(mOutsideWeight != 0.0, "");
 
         delete mOutsideMarker;
-        mOutsideMarker = new LodOutsideMarker(data->mVertexList, data->mTriangleList, data->mMeshBoundingSphereRadius, mOutsideWalkAngle);
+        mOutsideMarker = new LodOutsideMarker(data->mVertexList, data->mMeshBoundingSphereRadius, mOutsideWalkAngle);
         mOutsideMarker->markOutside();
 
 
         mCostCalculator->initCollapseCosts(data);
     }
 
-    Real LodCollapseCostOutside::computeEdgeCollapseCost( LodData* data, LodData::VertexI srci, LodData::Edge* dstEdge )
+    Real LodCollapseCostOutside::computeEdgeCollapseCost( LodData* data, LodData::Vertex* src, LodData::Edge* dstEdge )
     {
-        Real cost = mCostCalculator->computeEdgeCollapseCost(data, srci, dstEdge);
-        if(mOutsideMarker->isVertexOutside(srci) || mOutsideMarker->isVertexOutside(dstEdge->dsti)) {
+        Real cost = mCostCalculator->computeEdgeCollapseCost(data, src, dstEdge);
+        if(mOutsideMarker->isVertexOutside(src) || mOutsideMarker->isVertexOutside(dstEdge->dst)) {
             if(mOutsideWeight != LodData::NEVER_COLLAPSE_COST && cost != LodData::NEVER_COLLAPSE_COST) {
                 cost *= std::max<Real>(0.0078125f, mOutsideWeight * 8.0f);
             } else {

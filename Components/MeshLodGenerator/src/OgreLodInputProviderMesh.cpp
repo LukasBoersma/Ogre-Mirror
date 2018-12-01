@@ -147,20 +147,17 @@ namespace Ogre
         for (; vertex < vEnd; vertex += vSize) {
             float* pFloat;
             elemPos->baseVertexPointerToElement(vertex, &pFloat);
-            LodData::VertexI vi = (LodData::VertexI)data->mVertexList.size();
             data->mVertexList.push_back(LodData::Vertex());
             LodData::Vertex* v = &data->mVertexList.back();
             v->position.x = pFloat[0];
             v->position.y = pFloat[1];
             v->position.z = pFloat[2];
-            v->collapseToi = LodData::InvalidIndex;
             std::pair<LodData::UniqueVertexSet::iterator, bool> ret;
-            ret = data->mUniqueVertexSet.insert(vi);
+            ret = data->mUniqueVertexSet.insert(v);
             if (!ret.second) {
                 // Vertex position already exists.
                 data->mVertexList.pop_back();
-                vi = *ret.first;
-                v = &data->mVertexList[vi]; // Point to the existing vertex.
+                v = *ret.first; // Point to the existing vertex.
                 v->seam = true;
             } else {
 #if OGRE_DEBUG_MODE
@@ -169,7 +166,7 @@ namespace Ogre
 #endif
                 v->seam = false;
             }
-            lookup.push_back(vi);
+            lookup.push_back(v);
 
             if(data->mUseVertexNormals){
                 elemNormal->baseVertexPointerToElement(vNormal, &pFloat);

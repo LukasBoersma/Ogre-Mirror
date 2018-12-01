@@ -36,11 +36,9 @@
 
 namespace Ogre
 {
-    Real LodCollapseCostCurvature::computeEdgeCollapseCost( LodData* data, LodData::VertexI srci, LodData::Edge* dstEdge )
+    Real LodCollapseCostCurvature::computeEdgeCollapseCost( LodData* data, LodData::Vertex* src, LodData::Edge* dstEdge )
     {
-        LodData::VertexI dsti = dstEdge->dsti;
-        LodData::Vertex* src = &data->mVertexList[srci];
-        LodData::Vertex* dst = &data->mVertexList[dsti];
+        LodData::Vertex* dst = dstEdge->dst;
 
         // Degenerate case check
         // Are we going to invert a face normal of one of the neighboring faces?
@@ -50,16 +48,16 @@ namespace Ogre
             LodData::VTriangles::iterator it = src->triangles.begin();
             LodData::VTriangles::iterator itEnd = src->triangles.end();
             for (; it != itEnd; ++it) {
-                LodData::Triangle* triangle = &data->mTriangleList[*it];
+                LodData::Triangle* triangle = *it;
                 // Ignore the deleted faces (those including src & dest)
-                if (!triangle->hasVertex(dsti)) {
+                if (!triangle->hasVertex(dst)) {
                     // Test the new face normal
                     LodData::Vertex* pv0, * pv1, * pv2;
 
                     // Replace src with dest wherever it is
-                    pv0 = (triangle->vertexi[0] == srci) ? dst : &data->mVertexList[triangle->vertexi[0]];
-                    pv1 = (triangle->vertexi[1] == srci) ? dst : &data->mVertexList[triangle->vertexi[1]];
-                    pv2 = (triangle->vertexi[2] == srci) ? dst : &data->mVertexList[triangle->vertexi[2]];
+                    pv0 = (triangle->vertex[0] == src) ? dst : triangle->vertex[0];
+                    pv1 = (triangle->vertex[1] == src) ? dst : triangle->vertex[1];
+                    pv2 = (triangle->vertex[2] == src) ? dst : triangle->vertex[2];
 
                     Vector3 newNormal = Math::calculateBasicFaceNormalWithoutNormalize(
                         pv0->position, pv1->position, pv2->position);
@@ -101,7 +99,7 @@ namespace Ogre
                 LodData::VEdges::iterator it = src->edges.begin();
                 LodData::VEdges::iterator itEnd = src->edges.end();
                 for (; it != itEnd; it++) {
-                    LodData::Vertex* neighbor = &data->mVertexList[it->dsti];
+                    LodData::Vertex* neighbor = it->dst;
                     if (neighbor != dst && it->refCount == 1) {
                         Vector3 otherBorderEdge = src->position - neighbor->position;
                         otherBorderEdge.normalise();
@@ -126,11 +124,11 @@ namespace Ogre
             LodData::VTriangles::iterator itEnd = src->triangles.end();
             for (; it != itEnd; ++it) {
                 Real mincurv = -1.0f; // curve for face i and closer side to it
-                LodData::Triangle* triangle = &data->mTriangleList[*it];
+                LodData::Triangle* triangle = *it;
                 LodData::VTriangles::iterator it2 = src->triangles.begin();
                 for (; it2 != itEnd; ++it2) {
-                    LodData::Triangle* triangle2 = &data->mTriangleList[*it2];
-                    if (triangle2->hasVertex(dsti)) {
+                    LodData::Triangle* triangle2 = *it2;
+                    if (triangle2->hasVertex(dst)) {
 
                         // Dot product of face normal gives a good delta angle
                         Real dotprod = triangle->normal.dotProduct(triangle2->normal);
@@ -152,15 +150,15 @@ namespace Ogre
             } else {
                 if(MESHLOD_QUALITY >= 3) {
                     int seamNeighbors = 0;
-                    LodData::VertexI otherSeam;
+                    LodData::Vertex* otherSeam;
                     LodData::VEdges::iterator it = src->edges.begin();
                     LodData::VEdges::iterator itEnd = src->edges.end();
                     for (; it != itEnd; it++) {
-                        LodData::Vertex* neighbor = &data->mVertexList[it->dsti];
+                        LodData::Vertex* neighbor = it->dst;
                         if(neighbor->seam) {
                             seamNeighbors++;
                             if(neighbor != dst){
-                                otherSeam = it->dsti;
+                                otherSeam = neighbor;
                             }
                         }
                     }
@@ -188,7 +186,7 @@ namespace Ogre
             LodData::VEdges::iterator it = src->edges.begin();
             LodData::VEdges::iterator itEnd = src->edges.end();
             for (; it != itEnd; ++it) {
-                LodData::Vertex* neighbor = &data->mVertexList[it->dsti];
+                LodData::Vertex* neighbor = it->dst;
                 Real beforeDist = neighbor->position.distance(src->position);
                 Real afterDist = neighbor->position.distance(dst->position);
                 Real beforeDot = neighbor->normal.dotProduct(src->normal);

@@ -59,7 +59,7 @@ namespace Ogre
         plane[0] = triangle.normal.x;
         plane[1] = triangle.normal.y;
         plane[2] = triangle.normal.z;
-        Vector3& v0 = data->mVertexList[triangle.vertexi[0]].position;
+        Vector3& v0 = triangle.vertex[0]->position;
         plane[3] = -v0.dotProduct(triangle.normal);
         for(int i=0;i<4;i++){
             for(int n=0;n<4;n++){
@@ -68,11 +68,9 @@ namespace Ogre
         }
     }
 
-    Real LodCollapseCostQuadric::computeEdgeCollapseCost( LodData* data, LodData::VertexI srci, LodData::Edge* dstEdge )
+    Real LodCollapseCostQuadric::computeEdgeCollapseCost( LodData* data, LodData::Vertex* src, LodData::Edge* dstEdge )
     {
-        LodData::VertexI dsti = dstEdge->dsti;
-        LodData::Vertex* src = &data->mVertexList[srci];
-        LodData::Vertex* dst = &data->mVertexList[dsti];
+        LodData::Vertex* dst = dstEdge->dst;
 
         if (isBorderVertex(src)) {
             return LodData::NEVER_COLLAPSE_COST;
@@ -81,7 +79,8 @@ namespace Ogre
             return LodData::NEVER_COLLAPSE_COST;
         }
 
-        Matrix4 Qnew = mVertexQuadricList[srci] + mVertexQuadricList[dsti];
+        Matrix4 Qnew = mVertexQuadricList[LodData::getVectorIDFromPointer(data->mVertexList, src)] +
+            mVertexQuadricList[LodData::getVectorIDFromPointer(data->mVertexList, dst)];
 
         Vector4 Vnew(dst->position);
 
@@ -109,16 +108,16 @@ namespace Ogre
         tri = vertex.triangles.begin();
         triEnd = vertex.triangles.end();
         for (;tri != triEnd; ++tri) {
-            size_t id = *tri;
+            size_t id = LodData::getVectorIDFromPointer(data->mTriangleList, *tri);
             quadric = quadric + mTrianglePlaneQuadricList[id];
         }
     }
 
-    void LodCollapseCostQuadric::updateVertexCollapseCost( LodData* data, LodData::VertexI vertexi )
+    void LodCollapseCostQuadric::updateVertexCollapseCost( LodData* data, LodData::Vertex* vertex )
     {
-        computeVertexQuadric(data, vertexi);
+        computeVertexQuadric(data, LodData::getVectorIDFromPointer(data->mVertexList, vertex));
 
-        LodCollapseCost::updateVertexCollapseCost(data, vertexi);
+        LodCollapseCost::updateVertexCollapseCost(data, vertex);
     }
 
 
